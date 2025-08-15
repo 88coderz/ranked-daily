@@ -7,9 +7,8 @@ interface Props {
 }
 
 export default function StripeCheckout({ productId, onCheckout }: Props) {
-  // Use productId prop in the checkout handler
   const handleClick = () => {
-    if (productId) {
+    if (productId && productId.trim()) {
       onCheckout(productId);
     } else {
       alert('No product selected for checkout.');

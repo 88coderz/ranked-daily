@@ -40,6 +40,7 @@ export default function Comments({ articleId, comments, onAddComment }: Props) {
             placeholder="Add a comment..."
             value={text}
             onChange={(e) => setText(e.target.value)}
+            autoComplete="off"
           />
         </Form.Group>
         <Button type="submit" className="mt-2">Submit</Button>
