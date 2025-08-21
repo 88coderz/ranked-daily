@@ -1,6 +1,4 @@
 "use client"
-
-
 import React, { useState, useEffect } from 'react';
 import NextImage from 'next/image';
 import CategorySelector from '../components/CategorySelector';
@@ -22,7 +20,7 @@ interface Comment {
   }
 
 export default function Home() {
-  // State
+  //     STATE VARIABLES  
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [articles, setArticles] = useState<Article[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -32,7 +30,7 @@ export default function Home() {
   const [showSignIn, setShowSignIn] = useState(false);
   const [showSignUp, setShowSignUp] = useState(false);
 
-  // Fetch articles from Supabase
+  //    FETCH ARTICLES FROM SUPABASE
   useEffect(() => {
     const fetchArticles = async () => {
       let query = supabase.from('articles').select('*');
@@ -45,7 +43,7 @@ export default function Home() {
     fetchArticles();
   }, [selectedCategories]);
 
-  // Fetch comments for first article
+  //    FETCH COMMENTS FOR FIRST ARTICLE
   useEffect(() => {
     const fetchComments = async () => {
       if (!articles.length) return;
@@ -58,15 +56,15 @@ export default function Home() {
     fetchComments();
   }, [articles]);
 
-  // Auth handler
+  //    AUTH HANDLER
   const handleAuth = (userObj: UserProfile) => {
     setUser(userObj);
   };
 
-  // Upvote/downvote logic
+  //  UPVOTE / DOWNVOTE LOGIC
   const handleUpvote = async (id: string) => {
     await supabase.rpc('upvote_article', { article_id: id });
-    // Re-fetch articles
+    //    RE-FETCH LOGIC
     const { data } = await supabase.from('articles').select('*');
     if (data) setArticles(data);
   };
@@ -76,20 +74,20 @@ export default function Home() {
     if (data) setArticles(data);
   };
 
-  // Favorite logic
+  //     FAVORITE LOGIC
   const handleFavorite = async (id: string) => {
     if (!user) return;
     await supabase.from('favorites').upsert({ user_id: user.id, article_id: id });
   };
 
-  // Archive logic
+  //     ARCHIVE LOGIC
   const handleArchive = async (id: string) => {
     if (!user) return;
     await supabase.from('archived').upsert({ user_id: user.id, article_id: id });
     setArchived([...archived, id]);
   };
 
-  // Add comment
+  //     ADD COMMENT
   const handleAddComment = async (text: string) => {
     if (!user || !articles.length) return;
     await supabase.from('comments').insert({ user_id: user.id, article_id: articles[0].id, text });
@@ -100,12 +98,12 @@ export default function Home() {
     if (data) setComments(data);
   };
 
-  // Email archive (demo)
+  //     EMAIL ARCHIVE (demo)
   const handleEmailArchive = () => {
     alert('Archive emailed!');
   };
 
-  // Stripe checkout
+  //     STRIPE CHECKOUT
   const handleCheckout = async () => {
     const stripe = await stripePromise;
     const res = await fetch('/api/create-checkout-session', {
@@ -119,9 +117,9 @@ export default function Home() {
     }
   };
 
-  // Product suggestions (demo logic)
+  //    PRODUCT SUGGESTIONS ( DEMO LOGIC )
   useEffect(() => {
-    // Suggest products based on upvoted articles/comments
+    //  SUGGEST PRODUCTS BASED ON UPVOTED ARTICLES/COMMENTS
     setProducts([
       { id: 'prod1', name: 'Noise Cancelling Headphones', description: 'Great for focus.', link: '#' },
       { id: 'prod2', name: 'Smart Water Bottle', description: 'Stay hydrated.', link: '#' },
@@ -130,7 +128,7 @@ export default function Home() {
 
   return (
     <Container className="py-4" style={{ position: 'relative' }}>
-      {/* Top right avatar or auth buttons */}
+      {/*    TOP RIGHT = AVATAR OR AUTH BUTTONS     */}
       <div style={{ position: 'absolute', top: 16, right: 16, zIndex: 1000 }}>
         {user && user.avatar_url ? (
            <NextImage src={user.avatar_url} alt="avatar" width={40} height={40} style={{ borderRadius: '50%' }} />

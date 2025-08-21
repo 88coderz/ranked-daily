@@ -43,6 +43,7 @@ const Auth: React.FC<Props> = ({ onAuth, showSignIn, setShowSignIn, showSignUp, 
     const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
     setLoading(false);
     if (error) setError(error.message);
+    // After redirect, check if user profile is complete, prompt for missing info if needed
   };
 
   const handleSignUp = () => {
