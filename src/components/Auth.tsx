@@ -99,6 +99,48 @@ const Auth: React.FC<Props> = ({ onAuth, showSignIn, setShowSignIn, showSignUp, 
     setProfile({ ...profile, [e.target.name]: e.target.value });
   };
 
+  const handleProfileSave = async () => {
+    setProfileError('');
+    setLoading(true);
+
+    // Validate fields
+    if (!profile.name || !profile.contact || !profile.username) {
+      setProfileError('All fields are required.');
+      setLoading(false);
+      return;
+    }
+
+    // Check for duplicate username
+    const { data: usernameData, error: usernameError } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('username', profile.username);
+
+    if (usernameData && usernameData.length > 0) {
+      setProfileError('Username already taken. Please choose another.');
+      setLoading(false);
+      return;
+    }
+
+    // Save profile info (update if exists, insert if not)
+    const { error: upsertError } = await supabase
+      .from('profiles')
+      .upsert({
+        name: profile.name,
+        contact: profile.contact,
+        username: profile.username,
+        user_id: user?.id || null,
+      });
+
+    setLoading(false);
+
+    if (upsertError) {
+      setProfileError(upsertError.message);
+    } else {
+      setShowProfileModal(false);
+      // Optionally, update user context/state here
+    }
+  };
 
   const handleSignIn = async () => {
     setLoading(true);
