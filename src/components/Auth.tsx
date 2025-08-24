@@ -116,6 +116,14 @@ const Auth: React.FC<Props> = ({ onAuth, showSignIn, setShowSignIn, showSignUp, 
       .select('username')
       .eq('username', profile.username);
 
+    // Handle query error
+    if (usernameError) {
+      setProfileError('Unable to check username. Please try again later.');
+      console.error('Supabase username check error:', usernameError);
+      setLoading(false);
+      return;
+    }
+
     if (usernameData && usernameData.length > 0) {
       setProfileError('Username already taken. Please choose another.');
       setLoading(false);
