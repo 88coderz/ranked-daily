@@ -46,33 +46,35 @@ const Auth: React.FC<Props> = ({ onAuth, showSignIn, setShowSignIn, showSignUp, 
     // After redirect, check if user profile is complete, prompt for missing info if needed
   };
 
-  const handleSignUp = () => {
-    setShowProfileModal(true);
-    setShowSignUp(false);
-  };
-
-  // Removed unused handleProfileModalClose
-
-  const handleProfileSave = async () => {
+  const handleSignUp = async () => {
     setProfileError('');
+    setError('');
     setLoading(true);
+
     // Check for duplicate username
-    const { data, error } = await supabase
+    const { data: usernameData, error: usernameError } = await supabase
       .from('profiles')
       .select('username')
       .eq('username', profile.username);
-    if (data && data.length > 0) {
+
+    if (usernameData && usernameData.length > 0) {
       setProfileError('Username already taken. Please choose another.');
       setLoading(false);
       return;
     }
+
     // Proceed with signup
-    const { data: signupData, error: signupError } = await supabase.auth.signUp({ email, password });
+    const { data: signupData, error: signupError } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
     if (signupError) {
       setError(signupError.message);
       setLoading(false);
       return;
     }
+
     // Save profile info
     const { error: insertError } = await supabase
       .from('profiles')
@@ -82,11 +84,13 @@ const Auth: React.FC<Props> = ({ onAuth, showSignIn, setShowSignIn, showSignUp, 
         username: profile.username,
         user_id: signupData.user?.id || null,
       });
+
     setLoading(false);
+
     if (insertError) {
       setProfileError(insertError.message);
     } else {
-      setShowProfileModal(false);
+      setShowSignUp(false);
       setVerifySent(true);
     }
   };
@@ -168,7 +172,7 @@ const Auth: React.FC<Props> = ({ onAuth, showSignIn, setShowSignIn, showSignUp, 
                 <Form.Control type="password" value={password} onChange={e => setPassword(e.target.value)} />
               </Form.Group>
               {profileError && <Alert variant="danger" className="mt-2">{profileError}</Alert>}
-              <Button variant="primary" onClick={handleProfileSave} disabled={loading}>Sign Up</Button>
+              <Button variant="primary" onClick={handleSignUp} disabled={loading}>Sign Up</Button>
             </Form>
           </Modal.Body>
         </Modal>
