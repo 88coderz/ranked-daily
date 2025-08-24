@@ -10,7 +10,7 @@ interface Comment {
 interface Props {
   articleId: string;
   comments: Comment[];
-  onAddComment: (text: string) => void;
+  onAddComment: (text: string, articleId: string) => void;
 }
 
 export default function Comments({ articleId, comments, onAddComment }: Props) {
@@ -19,7 +19,7 @@ export default function Comments({ articleId, comments, onAddComment }: Props) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (text.trim()) {
-      onAddComment(text);
+      onAddComment(text, articleId);
       setText('');
     }
   };
