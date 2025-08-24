@@ -116,6 +116,7 @@ const Auth: React.FC<Props> = ({ onAuth, showSignIn, setShowSignIn, showSignUp, 
   return (
     <div>
       <>
+        {/* Existing Sign In Modal */}
         <Modal show={showSignIn} onHide={() => setShowSignIn(false)}>
           <Modal.Header closeButton>
             <Modal.Title>Sign In</Modal.Title>
@@ -138,6 +139,8 @@ const Auth: React.FC<Props> = ({ onAuth, showSignIn, setShowSignIn, showSignUp, 
             </Form>
           </Modal.Body>
         </Modal>
+
+        {/* Existing Sign Up Modal */}
         <Modal show={showSignUp} onHide={() => setShowSignUp(false)}>
           <Modal.Header closeButton>
             <Modal.Title>Sign Up</Modal.Title>
@@ -169,7 +172,62 @@ const Auth: React.FC<Props> = ({ onAuth, showSignIn, setShowSignIn, showSignUp, 
             </Form>
           </Modal.Body>
         </Modal>
-        {verifySent && <Alert variant="info">Account created! Please check your email and verify your address before signing in.</Alert>}
+
+        {/* Profile Modal: showProfileModal */}
+        <Modal show={showProfileModal} onHide={() => setShowProfileModal(false)}>
+          <Modal.Header closeButton>
+            <Modal.Title>Complete Your Profile</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <Form>
+              <Form.Group controlId="profileNameModal">
+                <Form.Label>Name</Form.Label>
+                <Form.Control
+                  name="name"
+                  value={profile.name}
+                  onChange={handleProfileChange}
+                  placeholder="Enter your name"
+                />
+              </Form.Group>
+              <Form.Group controlId="profileContactModal">
+                <Form.Label>Contact Info</Form.Label>
+                <Form.Control
+                  name="contact"
+                  value={profile.contact}
+                  onChange={handleProfileChange}
+                  placeholder="Enter your contact info"
+                />
+              </Form.Group>
+              <Form.Group controlId="profileUsernameModal">
+                <Form.Label>Username</Form.Label>
+                <Form.Control
+                  name="username"
+                  value={profile.username}
+                  onChange={handleProfileChange}
+                  placeholder="Choose a username"
+                />
+              </Form.Group>
+              {profileError && <Alert variant="danger" className="mt-2">{profileError}</Alert>}
+              <Button
+                variant="primary"
+                onClick={handleProfileSave}
+                disabled={loading}
+                className="mt-2"
+              >
+                Save Profile
+              </Button>
+            </Form>
+          </Modal.Body>
+        </Modal>
+
+        {/* Verification Alert */}
+        {verifySent && (
+          <Alert variant="info">
+            Account created! Please check your email and verify your address before signing in.
+          </Alert>
+        )}
+
+        {/* User Avatar */}
         {user && user.avatar_url && (
           <div style={{ position: 'absolute', top: 16, right: 16 }}>
             <Image src={user.avatar_url} roundedCircle width={40} height={40} alt="avatar" />
