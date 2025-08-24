@@ -25,7 +25,7 @@ const Auth: React.FC<Props> = ({ onAuth, showSignIn, setShowSignIn, showSignUp, 
   const [resetSent, setResetSent] = useState<boolean>(false);
   const [verifySent, setVerifySent] = useState<boolean>(false);
   const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
-  const [profile, setProfile] = useState<{ name: string; contact: string; username: string }>({ name: '', contact: '', username: '' });
+  const [profile, setProfile] = useState<{ name: string; email: string; username: string }>({ name: '', email: '', username: '' });
   const [profileError, setProfileError] = useState<string>('');
 
   const handlePasswordReset = async () => {
@@ -57,6 +57,14 @@ const Auth: React.FC<Props> = ({ onAuth, showSignIn, setShowSignIn, showSignUp, 
       .select('username')
       .eq('username', profile.username);
 
+    // Handle query error
+    if (usernameError) {
+      setProfileError('Unable to check username. Please try again later.');
+      console.error('Supabase username check error:', usernameError);
+      setLoading(false);
+      return;
+    }
+
     if (usernameData && usernameData.length > 0) {
       setProfileError('Username already taken. Please choose another.');
       setLoading(false);
@@ -80,7 +88,7 @@ const Auth: React.FC<Props> = ({ onAuth, showSignIn, setShowSignIn, showSignUp, 
       .from('profiles')
       .insert({
         name: profile.name,
-        contact: profile.contact,
+        email: profile.email,
         username: profile.username,
         user_id: signupData.user?.id || null,
       });
@@ -104,7 +112,7 @@ const Auth: React.FC<Props> = ({ onAuth, showSignIn, setShowSignIn, showSignUp, 
     setLoading(true);
 
     // Validate fields
-    if (!profile.name || !profile.contact || !profile.username) {
+    if (!profile.name || !profile.email || !profile.username) {
       setProfileError('All fields are required.');
       setLoading(false);
       return;
@@ -135,7 +143,7 @@ const Auth: React.FC<Props> = ({ onAuth, showSignIn, setShowSignIn, showSignUp, 
       .from('profiles')
       .upsert({
         name: profile.name,
-        contact: profile.contact,
+        email: profile.email,
         username: profile.username,
         user_id: user?.id || null,
       });
@@ -207,7 +215,7 @@ const Auth: React.FC<Props> = ({ onAuth, showSignIn, setShowSignIn, showSignUp, 
               </Form.Group>
               <Form.Group controlId="profileContact">
                 <Form.Label>Contact Info</Form.Label>
-                <Form.Control name="contact" value={profile.contact} onChange={handleProfileChange} />
+                <Form.Control name="contact" value={profile.email} onChange={handleProfileChange} />
               </Form.Group>
               <Form.Group controlId="profileUsername">
                 <Form.Label>Username</Form.Label>
@@ -247,7 +255,7 @@ const Auth: React.FC<Props> = ({ onAuth, showSignIn, setShowSignIn, showSignUp, 
                 <Form.Label>Contact Info</Form.Label>
                 <Form.Control
                   name="contact"
-                  value={profile.contact}
+                  value={profile.email}
                   onChange={handleProfileChange}
                   placeholder="Enter your contact info"
                 />
