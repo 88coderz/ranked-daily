@@ -120,6 +120,7 @@ export default function Home() {
   //    PRODUCT SUGGESTIONS ( DEMO LOGIC )
   useEffect(() => {
     //  SUGGEST PRODUCTS BASED ON UPVOTED ARTICLES/COMMENTS
+    //  SENTEMENT{js} ANALYSIS OR ( ML MODEL ) CAN BE USED HERE 
     setProducts([
       { id: 'prod1', name: 'Noise Cancelling Headphones', description: 'Great for focus.', link: '#' },
       { id: 'prod2', name: 'Smart Water Bottle', description: 'Stay hydrated.', link: '#' },
