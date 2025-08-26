@@ -12,7 +12,6 @@ import StripeCheckout from '../components/StripeCheckout';
 import { Container, Row, Col } from 'react-bootstrap';
 import { supabase } from '../lib/supabaseClient';
 import { stripePromise } from '../lib/stripeClient';
-import TodosServer from '../components/TodosServer';
 
 interface Comment {
   id: string;
