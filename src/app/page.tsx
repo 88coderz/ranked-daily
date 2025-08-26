@@ -169,11 +169,7 @@ export default function Home() {
           {user && <Favorites userId={user.id} />}
         </Col>
       </Row>
-      {/* Example usage of server component */}
-      <div>
-        <h3>Server Fetched Todos</h3>
-        <TodosServer />
-      </div>
+
     </Container>
   );
 }
