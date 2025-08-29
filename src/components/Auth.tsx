@@ -31,7 +31,7 @@ const Auth: React.FC<Props> = ({ onAuth, showSignIn, setShowSignIn, showSignUp, 
   const handlePasswordReset = async () => {
     setLoading(true);
     setError('');
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: 'https://rankeddaily.com/password-reset' });
     setLoading(false);
     if (error) setError(error.message);
     else setResetSent(true);
@@ -189,14 +189,37 @@ const Auth: React.FC<Props> = ({ onAuth, showSignIn, setShowSignIn, showSignUp, 
                 <Form.Label>Email</Form.Label>
                 <Form.Control type="email" value={email} onChange={e => setEmail(e.target.value)} />
               </Form.Group>
+
               <Form.Group controlId="formPassword">
                 <Form.Label>Password</Form.Label>
                 <Form.Control type="password" value={password} onChange={e => setPassword(e.target.value)} />
               </Form.Group>
-              {error && <Alert variant="danger" className="mt-2">{error}</Alert>}
-              {resetSent && <Alert variant="info" className="mt-2">Password reset email sent!</Alert>}
+
+              {
+                error && 
+                <Alert 
+                  variant="danger" 
+                  className="mt-2"> { error } 
+                </Alert>
+              }
+
+              {
+                resetSent && 
+                <Alert 
+                  variant="info" 
+                  className="mt-2"> Password reset email sent!
+                </Alert>
+              }
+
               <Button variant="primary" className="mt-2 me-2" onClick={handleSignIn} disabled={loading}>Sign In</Button>
-              <Button variant="outline-info" className="mt-2 me-2" onClick={handlePasswordReset} disabled={loading || !email}>Reset Password</Button>
+
+              <Button 
+                variant="outline-info" 
+                className="mt-2 me-2" 
+                onClick={handlePasswordReset} 
+                disabled={loading || !email}>Reset Password
+              </Button>
+
               <Button variant="outline-dark" className="mt-2" onClick={handleGoogleLogin} disabled={loading}>Sign in with Google</Button>
             </Form>
           </Modal.Body>
