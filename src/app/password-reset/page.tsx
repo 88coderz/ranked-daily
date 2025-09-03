@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { createClient } from '@/utils/supabase/client'; // Adjust this path as needed
-import { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
+import { useState } from 'react';
+import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
 
@@ -14,24 +13,7 @@ export default function PasswordReset() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const [user, setUser] = useState<User | null>(null)
   const router = useRouter();
- 
-  useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event: AuthChangeEvent, session:Session ) => {
-        if (event === 'PASSWORD_RECOVERY') {
-          // This event is triggered when the user lands on this page from the email link
-          setUser(session?.user ?? null);
-          setMessage('Please enter your new password.');
-        }
-      }
-    );
-
-    return () => {
-      authListener?.subscription.unsubscribe();
-    };
-  }, []);
 
   const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,20 +26,12 @@ export default function PasswordReset() {
       return;
     }
 
-    if (!user) {
-      setError('Invalid or expired password reset link. Please request a new one.');
-      setLoading(false);
-      return;
-    }
-
-    // Update the user's password using the temporary session
-    const { data, error: updateError } = await supabase.auth.updateUser({ password });
+    const { error: updateError } = await supabase.auth.updateUser({ password });
 
     if (updateError) {
       setError(updateError.message);
     } else {
-      setMessage('Your password has been updated successfully!');
-      // Redirect to the login page after a short delay
+      setMessage('Your password has been updated successfully! Redirecting to login...');
       setTimeout(() => {
         router.push('/login');
       }, 3000);
@@ -65,21 +39,6 @@ export default function PasswordReset() {
 
     setLoading(false);
   };
-
-  if (!user) {
-    return (
-      <Container className="d-flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
-        <Card className="p-4" style={{ maxWidth: '400px', width: '100%' }}>
-          <Card.Body>
-            <h2 className="text-center mb-4">Password Recovery</h2>
-            <Alert variant="danger">
-              Invalid or expired link. Please request a new password reset email.
-            </Alert>
-          </Card.Body>
-        </Card>
-      </Container>
-    );
-  }
 
   return (
     <Container className="d-flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
