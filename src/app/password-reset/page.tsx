@@ -1,11 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
-
-const supabase = createClient();
 
 export default function PasswordReset() {
   const [password, setPassword] = useState('');
@@ -26,15 +23,22 @@ export default function PasswordReset() {
       return;
     }
 
-    const { error: updateError } = await supabase.auth.updateUser({ password });
+    const response = await fetch('/api/password-reset', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ password }),
+    });
 
-    if (updateError) {
-      setError(updateError.message);
-    } else {
+    if (response.ok) {
       setMessage('Your password has been updated successfully! Redirecting to login...');
       setTimeout(() => {
         router.push('/login');
       }, 3000);
+    } else {
+      const { error } = await response.json();
+      setError(error);
     }
 
     setLoading(false);
