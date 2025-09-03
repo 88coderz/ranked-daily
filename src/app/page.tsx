@@ -169,6 +169,7 @@ export default function Home() {
           {user && <Favorites userId={user.id} />}
         </Col>
       </Row>
+
     </Container>
   );
 }
