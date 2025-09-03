@@ -1,5 +1,6 @@
 "use client"
 import React, { useState, useEffect } from 'react';
+import { Metadata } from 'next';
 import NextImage from 'next/image';
 import CategorySelector from '../components/CategorySelector';
 import ArticleList, { Article } from '../components/ArticleList';
@@ -18,6 +19,11 @@ interface Comment {
   user: string;
   text: string;
   }
+
+  export const metadata: Metadata = {
+    title: 'Home - Ranked Daily',
+    description: 'The main page of our application, featuring articles and categories.',
+  };
 
 export default function Home() {
   //     STATE VARIABLES  

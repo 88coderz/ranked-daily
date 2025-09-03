@@ -1,8 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { Metadata } from 'next';
 import { useRouter } from 'next/navigation';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
+
+export const metadata: Metadata = {
+  title: 'Password Reset - Ranked Daily',
+  description: 'Reset your password for Ranked Daily.',
+};
 
 export default function PasswordReset() {
   const [password, setPassword] = useState('');
