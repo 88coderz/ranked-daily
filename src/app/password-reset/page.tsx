@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from './utils/supabase/client'; // Adjust this path as needed
-import { AuthChangeEvent, Session } from '@supabase/supabase-js';
+import { createClient } from '@/utils/supabase/client'; // Adjust this path as needed
+import { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
 
