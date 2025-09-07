@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
+import { createClient } from '@/utils/supabase/client';
 
 export default function PasswordResetClient() {
   const [password, setPassword] = useState('');
@@ -14,35 +15,51 @@ export default function PasswordResetClient() {
 
   const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
 
     if (password !== confirmPassword) {
       setError('Passwords do not match.');
-      setLoading(false);
       return;
     }
 
-    const response = await fetch('/api/password-reset', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ password }),
-    });
+    setLoading(true);
+    setError('');
+    setMessage('');
 
-    if (response.ok) {
+    const supabase = createClient();
+    const { error } = await supabase.auth.updateUser({ password });
+
+    if (error) {
+      setError(error.message);
+    } else {
       setMessage('Your password has been updated successfully! Redirecting to login...');
       setTimeout(() => {
         router.push('/login');
       }, 3000);
-    } else {
-      const { error } = await response.json();
-      setError(error);
     }
 
     setLoading(false);
   };
+
+  useEffect(() => {
+    const hash = window.location.hash;
+    const params = new URLSearchParams(hash.substring(1));
+    const accessToken = params.get('access_token');
+    const error_description = params.get('error_description');
+
+    if(error_description) {
+      setError(error_description);
+    } else if (accessToken) {
+      const supabase = createClient();
+      supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: '', // The refresh token is not available in the password reset flow
+      }).then(({ error }) => {
+        if (error) {
+          setError(error.message);
+        }
+      });
+    }
+  }, []);
 
   return (
     <Container className="d-flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
