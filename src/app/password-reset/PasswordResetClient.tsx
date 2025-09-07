@@ -1,9 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
-import { createClient } from '@/utils/supabase/client';
 
 export default function PasswordResetClient() {
   const [password, setPassword] = useState('');
@@ -12,21 +11,6 @@ export default function PasswordResetClient() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const router = useRouter();
-  const supabase = createClient();
-
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        // The user is in the password recovery flow.
-        // The session should be automatically set by the library.
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [supabase]);
-
 
   const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,16 +24,22 @@ export default function PasswordResetClient() {
     setError('');
     setMessage('');
 
-    // The session should be set automatically by the onAuthStateChange listener
-    const { error } = await supabase.auth.updateUser({ password });
+    const res = await fetch('/api/password-reset', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ password }),
+    });
 
-    if (error) {
-      setError(error.message);
-    } else {
+    if (res.ok) {
       setMessage('Your password has been updated successfully! Redirecting to login...');
       setTimeout(() => {
         router.push('/login');
       }, 3000);
+    } else {
+      const { error } = await res.json();
+      setError(error);
     }
 
     setLoading(false);

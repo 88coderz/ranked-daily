@@ -1,37 +1,41 @@
-import React, { useState } from 'react';
-import { Form, Button, Alert, Modal, Image } from 'react-bootstrap';
-import { supabase } from '../lib/supabaseClient';
+'use client';
+import { useState, useEffect } from 'react';
+import { createClient } from '@/utils/supabase/client';
+import { useRouter } from 'next/navigation';
+import { Modal, Form, Button, Alert } from 'react-bootstrap';
 
-export interface UserProfile {
-  id: string;
-  email: string;
-  avatar_url?: string;
+interface Profile {
+  username: string;
+  first_name: string;
+  last_name: string;
 }
 
-interface Props {
-  onAuth: (user: UserProfile) => void;
-  showSignIn: boolean;
-  setShowSignIn: (show: boolean) => void;
-  showSignUp: boolean;
-  setShowSignUp: (show: boolean) => void;
-  user?: UserProfile | null;
-}
+export default function Auth() {
+  const supabase = createClient();
+  const router = useRouter();
+  const [user, setUser] = useState<any>(null);
+  const [show, setShow] = useState(false);
+  const [isLogin, setIsLogin] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [profile, setProfile] = useState<Profile>({ username: '', first_name: '', last_name: '' });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [profileError, setProfileError] = useState('');
+  const [resetSent, setResetSent] = useState(false);
 
-const Auth: React.FC<Props> = ({ onAuth, showSignIn, setShowSignIn, showSignUp, setShowSignUp, user }) => {
-  const [email, setEmail] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [error, setError] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
-  const [resetSent, setResetSent] = useState<boolean>(false);
-  const [verifySent, setVerifySent] = useState<boolean>(false);
-  const [showProfileModal, setShowProfileModal] = useState<boolean>(false);
-  const [profile, setProfile] = useState<{ name: string; email: string; username: string }>({ name: '', email: '', username: '' });
-  const [profileError, setProfileError] = useState<string>('');
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setUser(session?.user ?? null);
+      setShow(!session?.user);
+    });
+    return () => subscription.unsubscribe();
+  }, [supabase]);
 
   const handlePasswordReset = async () => {
     setLoading(true);
     setError('');
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: 'https://rankeddaily.com/password-reset' });
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: 'http://rankeddaily.com/password-reset' });
     setLoading(false);
     if (error) setError(error.message);
     else setResetSent(true);
@@ -43,7 +47,6 @@ const Auth: React.FC<Props> = ({ onAuth, showSignIn, setShowSignIn, showSignUp, 
     const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' });
     setLoading(false);
     if (error) setError(error.message);
-    // After redirect, check if user profile is complete, prompt for missing info if needed
   };
 
   const handleSignUp = async () => {
@@ -51,276 +54,112 @@ const Auth: React.FC<Props> = ({ onAuth, showSignIn, setShowSignIn, showSignUp, 
     setError('');
     setLoading(true);
 
-    // Check for duplicate username
     const { data: usernameData, error: usernameError } = await supabase
       .from('profiles')
       .select('username')
       .eq('username', profile.username);
 
-    // Handle query error
     if (usernameError) {
-      setProfileError('Unable to check username. Please try again later.');
-      console.error('Supabase username check error:', usernameError);
       setLoading(false);
-      return;
+      return setError(usernameError.message);
     }
-
     if (usernameData && usernameData.length > 0) {
-      setProfileError('Username already taken. Please choose another.');
       setLoading(false);
-      return;
+      return setProfileError('Username is already taken.');
     }
 
-    // Proceed with signup
-    const { data: signupData, error: signupError } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-
-    if (signupError) {
-      setError(signupError.message);
+    const { data: { user }, error: signUpError } = await supabase.auth.signUp({ email, password });
+    if (signUpError) {
       setLoading(false);
-      return;
+      return setError(signUpError.message);
     }
-
-    // Save profile info
-    const { error: insertError } = await supabase
-      .from('profiles')
-      .insert({
-        name: profile.name,
-        email: profile.email,
-        username: profile.username,
-        user_id: signupData.user?.id || null,
-      });
-
+    if (user) {
+      const { error: profileError } = await supabase.from('profiles').insert({ id: user.id, ...profile });
+      if (profileError) {
+        setLoading(false);
+        return setError(profileError.message);
+      }
+      router.refresh(); // Refresh the page to update the user state
+    }
     setLoading(false);
-
-    if (insertError) {
-      setProfileError(insertError.message);
-    } else {
-      setShowSignUp(false);
-      setVerifySent(true);
-    }
   };
 
-  const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setProfile({ ...profile, [e.target.name]: e.target.value });
-  };
-
-  const handleProfileSave = async () => {
-    setProfileError('');
-    setLoading(true);
-
-    // Validate fields
-    if (!profile.name || !profile.email || !profile.username) {
-      setProfileError('All fields are required.');
-      setLoading(false);
-      return;
-    }
-
-    // Check for duplicate username
-    const { data: usernameData, error: usernameError } = await supabase
-      .from('profiles')
-      .select('username')
-      .eq('username', profile.username);
-
-    // Handle query error
-    if (usernameError) {
-      setProfileError('Unable to check username. Please try again later.');
-      console.error('Supabase username check error:', usernameError);
-      setLoading(false);
-      return;
-    }
-
-    if (usernameData && usernameData.length > 0) {
-      setProfileError('Username already taken. Please choose another.');
-      setLoading(false);
-      return;
-    }
-
-    // Save profile info (update if exists, insert if not)
-    const { error: upsertError } = await supabase
-      .from('profiles')
-      .upsert({
-        name: profile.name,
-        email: profile.email,
-        username: profile.username,
-        user_id: user?.id || null,
-      });
-
-    setLoading(false);
-
-    if (upsertError) {
-      setProfileError(upsertError.message);
-    } else {
-      setShowProfileModal(false);
-      // Optionally, update user context/state here
-    }
-  };
-
-  const handleSignIn = async () => {
-    setLoading(true);
+  const handleLogin = async () => {
     setError('');
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) setError(error.message);
-    else if (data.user) {
-      const mappedUser: UserProfile = {
-        id: data.user.id,
-        email: data.user.email ?? '',
-        avatar_url: data.user.user_metadata?.avatar_url ?? undefined,
-      };
-      onAuth(mappedUser);
-      setShowSignIn(false);
-    }
+    else router.refresh();
+    setLoading(false);
   };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.refresh();
+  };
+
+  if (user) {
+    return (
+      <div>
+        <Button onClick={handleLogout}>Logout</Button>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <>
-        {/* Existing Sign In Modal */}
-        <Modal show={showSignIn} onHide={() => setShowSignIn(false)}>
-          <Modal.Header closeButton>
-            <Modal.Title>Sign In</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <Form>
-              <Form.Group controlId="formEmail">
-                <Form.Label>Email</Form.Label>
-                <Form.Control type="email" value={email} onChange={e => setEmail(e.target.value)} />
-              </Form.Group>
-
-              <Form.Group controlId="formPassword">
-                <Form.Label>Password</Form.Label>
-                <Form.Control type="password" value={password} onChange={e => setPassword(e.target.value)} />
-              </Form.Group>
-
-              {
-                error && 
-                <Alert 
-                  variant="danger" 
-                  className="mt-2"> { error } 
-                </Alert>
-              }
-
-              {
-                resetSent && 
-                <Alert 
-                  variant="info" 
-                  className="mt-2"> Password reset email sent!
-                </Alert>
-              }
-
-              <Button variant="primary" className="mt-2 me-2" onClick={handleSignIn} disabled={loading}>Sign In</Button>
-
-              <Button 
-                variant="outline-info" 
-                className="mt-2 me-2" 
-                onClick={handlePasswordReset} 
-                disabled={loading || !email}>Reset Password
-              </Button>
-
-              <Button variant="outline-dark" className="mt-2" onClick={handleGoogleLogin} disabled={loading}>Sign in with Google</Button>
-            </Form>
-          </Modal.Body>
-        </Modal>
-
-        {/* Existing Sign Up Modal */}
-        <Modal show={showSignUp} onHide={() => setShowSignUp(false)}>
-          <Modal.Header closeButton>
-            <Modal.Title>Sign Up</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <Form>
-              <Form.Group controlId="profileName">
-                <Form.Label>Name</Form.Label>
-                <Form.Control name="name" value={profile.name} onChange={handleProfileChange} />
-              </Form.Group>
-              <Form.Group controlId="profileContact">
-                <Form.Label>Contact Info</Form.Label>
-                <Form.Control name="contact" value={profile.email} onChange={handleProfileChange} />
-              </Form.Group>
-              <Form.Group controlId="profileUsername">
-                <Form.Label>Username</Form.Label>
-                <Form.Control name="username" value={profile.username} onChange={handleProfileChange} />
-              </Form.Group>
-              <Form.Group controlId="formEmail">
-                <Form.Label>Email</Form.Label>
-                <Form.Control type="email" value={email} onChange={e => setEmail(e.target.value)} />
-              </Form.Group>
-              <Form.Group controlId="formPassword">
-                <Form.Label>Password</Form.Label>
-                <Form.Control type="password" value={password} onChange={e => setPassword(e.target.value)} />
-              </Form.Group>
-              {profileError && <Alert variant="danger" className="mt-2">{profileError}</Alert>}
-              <Button variant="primary" onClick={handleSignUp} disabled={loading}>Sign Up</Button>
-            </Form>
-          </Modal.Body>
-        </Modal>
-
-        {/* Profile Modal: showProfileModal */}
-        <Modal show={showProfileModal} onHide={() => setShowProfileModal(false)}>
-          <Modal.Header closeButton>
-            <Modal.Title>Complete Your Profile</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            <Form>
-              <Form.Group controlId="profileNameModal">
-                <Form.Label>Name</Form.Label>
-                <Form.Control
-                  name="name"
-                  value={profile.name}
-                  onChange={handleProfileChange}
-                  placeholder="Enter your name"
-                />
-              </Form.Group>
-              <Form.Group controlId="profileContactModal">
-                <Form.Label>Contact Info</Form.Label>
-                <Form.Control
-                  name="contact"
-                  value={profile.email}
-                  onChange={handleProfileChange}
-                  placeholder="Enter your contact info"
-                />
-              </Form.Group>
-              <Form.Group controlId="profileUsernameModal">
-                <Form.Label>Username</Form.Label>
-                <Form.Control
-                  name="username"
-                  value={profile.username}
-                  onChange={handleProfileChange}
-                  placeholder="Choose a username"
-                />
-              </Form.Group>
-              {profileError && <Alert variant="danger" className="mt-2">{profileError}</Alert>}
-              <Button
-                variant="primary"
-                onClick={handleProfileSave}
-                disabled={loading}
-                className="mt-2"
-              >
-                Save Profile
-              </Button>
-            </Form>
-          </Modal.Body>
-        </Modal>
-
-        {/* Verification Alert */}
-        {verifySent && (
-          <Alert variant="info">
-            Account created! Please check your email and verify your address before signing in.
-          </Alert>
+    <Modal show={show} onHide={() => setShow(false)} centered>
+      <Modal.Header closeButton>
+        <Modal.Title>{isLogin ? 'Login' : 'Sign Up'}</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        {error && <Alert variant="danger">{error}</Alert>}
+        {resetSent && <Alert variant="success">Password reset link sent to your email.</Alert>}
+        {isLogin ? (
+          <Form>
+            <Form.Group controlId="formBasicEmail">
+              <Form.Label>Email address</Form.Label>
+              <Form.Control type="email" placeholder="Enter email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            </Form.Group>
+            <Form.Group controlId="formBasicPassword">
+              <Form.Label>Password</Form.Label>
+              <Form.Control type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            </Form.Group>
+            <Button variant="primary" onClick={handleLogin} disabled={loading}>{loading ? 'Loading...' : 'Login'}</Button>
+            <Button variant="link" onClick={handlePasswordReset}>Forgot Password?</Button>
+            <Button variant="secondary" onClick={handleGoogleLogin}>Login with Google</Button>
+          </Form>
+        ) : (
+          <Form>
+            {profileError && <Alert variant="danger">{profileError}</Alert>}
+            <Form.Group controlId="formBasicUsername">
+              <Form.Label>Username</Form.Label>
+              <Form.Control type="text" placeholder="Enter username" value={profile.username} onChange={(e) => setProfile({ ...profile, username: e.target.value })} />
+            </Form.Group>
+            <Form.Group controlId="formBasicFirstName">
+              <Form.Label>First Name</Form.Label>
+              <Form.Control type="text" placeholder="First Name" value={profile.first_name} onChange={(e) => setProfile({ ...profile, first_name: e.target.value })} />
+            </Form.Group>
+            <Form.Group controlId="formBasicLastName">
+              <Form.Label>Last Name</Form.Label>
+              <Form.Control type="text" placeholder="Last Name" value={profile.last_name} onChange={(e) => setProfile({ ...profile, last_name: e.target.value })} />
+            </Form.Group>
+            <Form.Group controlId="formBasicEmail">
+              <Form.Label>Email address</Form.Label>
+              <Form.Control type="email" placeholder="Enter email" value={email} onChange={(e) => setEmail(e.target.value)} />
+            </Form.Group>
+            <Form.Group controlId="formBasicPassword">
+              <Form.Label>Password</Form.Label>
+              <Form.Control type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            </Form.Group>
+            <Button variant="primary" onClick={handleSignUp} disabled={loading}>{loading ? 'Loading...' : 'Sign Up'}</Button>
+          </Form>
         )}
-
-        {/* User Avatar */}
-        {user && user.avatar_url && (
-          <div style={{ position: 'absolute', top: 16, right: 16 }}>
-            <Image src={user.avatar_url} roundedCircle width={40} height={40} alt="avatar" />
-          </div>
-        )}
-      </>
-    </div>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="link" onClick={() => setIsLogin(!isLogin)}>
+          {isLogin ? 'Need an account? Sign Up' : 'Have an account? Login'}
+        </Button>
+      </Modal.Footer>
+    </Modal>
   );
-};
-
-export default Auth;
+}
