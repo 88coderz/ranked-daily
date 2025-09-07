@@ -12,6 +12,21 @@ export default function PasswordResetClient() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const router = useRouter();
+  const supabase = createClient();
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        // The user is in the password recovery flow.
+        // The session should be automatically set by the library.
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
+
 
   const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +40,7 @@ export default function PasswordResetClient() {
     setError('');
     setMessage('');
 
-    const supabase = createClient();
+    // The session should be set automatically by the onAuthStateChange listener
     const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
@@ -39,27 +54,6 @@ export default function PasswordResetClient() {
 
     setLoading(false);
   };
-
-  useEffect(() => {
-    const hash = window.location.hash;
-    const params = new URLSearchParams(hash.substring(1));
-    const accessToken = params.get('access_token');
-    const error_description = params.get('error_description');
-
-    if(error_description) {
-      setError(error_description);
-    } else if (accessToken) {
-      const supabase = createClient();
-      supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: '', // The refresh token is not available in the password reset flow
-      }).then(({ error }) => {
-        if (error) {
-          setError(error.message);
-        }
-      });
-    }
-  }, []);
 
   return (
     <Container className="d-flex align-items-center justify-content-center" style={{ minHeight: '100vh' }}>
