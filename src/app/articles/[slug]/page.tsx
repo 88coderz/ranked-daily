@@ -1,5 +1,5 @@
-import { createClient } from '@/utils/supabase/server'
-import ReactMarkdown from 'react-markdown'
+import { createClient } from '@/utils/supabase/server';
+import ReactMarkdown from 'react-markdown';
 
 export default async function ArticlePage({ params }: { params: { slug: string } }) {
   const supabase = createClient()
@@ -15,9 +15,9 @@ export default async function ArticlePage({ params }: { params: { slug: string }
   }
 
   return (
-    <div className="container">
-      <h1>{article.title}</h1>
-      <ReactMarkdown>{article.content}</ReactMarkdown>
-    </div>
+      <div className="container">
+        <h1>{article.title}</h1>
+        <ReactMarkdown>{article.content}</ReactMarkdown>
+      </div>
   )
 }

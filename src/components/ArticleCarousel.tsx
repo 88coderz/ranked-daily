@@ -3,13 +3,14 @@
 import { Card } from 'react-bootstrap';
 import { Article } from '@/interfaces/article';
 import Carousel from 'react-bootstrap/Carousel';
+import Link from 'next/link';
 
 export default function ArticleCarousel({ articles }: { articles: Article[] }) {
   return (
     <Carousel>
       {articles.map((article) => (
         <Carousel.Item key={article.id}>
-          <a href={`https://www.rankeddaily.com/articles/${article.slug}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }} target="_blank" rel="noopener noreferrer">
+          <Link href={`/articles/${article.slug}`} style={{ textDecoration: 'none', color: 'inherit' }}>
             <Card>
               <Card.Body>
                 <Card.Title>{article.title || 'Untitled Article'}</Card.Title>
@@ -18,7 +19,7 @@ export default function ArticleCarousel({ articles }: { articles: Article[] }) {
                 </Card.Text>
               </Card.Body>
             </Card>
-          </a>
+          </Link>
         </Carousel.Item>
       ))}
     </Carousel>
