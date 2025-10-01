@@ -8,6 +8,8 @@ import { Button, Form } from 'react-bootstrap'
 export default function NewArticlePage() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [metaDescription, setMetaDescription] = useState('')
+  const [tags, setTags] = useState('')
   const router = useRouter()
   const supabase = createClient()
 
@@ -25,8 +27,8 @@ export default function NewArticlePage() {
         slug,
         summary,
         word_count,
-        tags: '',
-        meta_description: summary,
+        tags,
+        meta_description: metaDescription,
       })
       router.push('/')
     }
@@ -51,6 +53,22 @@ export default function NewArticlePage() {
             rows={10}
             value={content}
             onChange={(e) => setContent(e.target.value)}
+          />
+        </Form.Group>
+        <Form.Group className="mb-3">
+          <Form.Label>Meta Description</Form.Label>
+          <Form.Control
+            type="text"
+            value={metaDescription}
+            onChange={(e) => setMetaDescription(e.target.value)}
+          />
+        </Form.Group>
+        <Form.Group className="mb-3">
+          <Form.Label>Tags</Form.Label>
+          <Form.Control
+            type="text"
+            value={tags}
+            onChange={(e) => setTags(e.target.value)}
           />
         </Form.Group>
         <Button onClick={handleSubmit}>Submit</Button>
