@@ -8,7 +8,7 @@ export default function ArticleList({ articles }: { articles: Article[] }) {
     <ListGroup>
       {articles.map((article) => (
         <ListGroup.Item key={article.id}>
-          <a href={`https://www.rankeddaily.com/articles/${article.slug}`}>{article.title}</a>
+          <a href={`https://rankeddaily.com/articles/${article.slug}`}>{article.title}</a>
         </ListGroup.Item>
       ))}
     </ListGroup>
