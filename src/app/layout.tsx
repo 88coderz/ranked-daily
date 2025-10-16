@@ -1,89 +1,63 @@
-import { Metadata } from 'next';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import Container from 'react-bootstrap/Container';
+import './globals.css';
+import Header from '@/components/Header';
+import Consent from '@/components/Consent';
+import Script from 'next/script';
 
-const title = 'Ranked Daily - SEO-Optimized Next.js Boilerplate';
-const description =
-  'This is a Next.js boilerplate with Supabase authentication and SEO best practices implemented.';
+const GTM_ID = 'GTM-59FTZ3QC';
 
-export const metadata: Metadata = {
-  metadataBase: new URL('https://ranked-daily.com'),
-  title,
-  description,
-  keywords: ['Next.js', 'React', 'JavaScript', 'Boilerplate', 'Template', 'Supabase', 'SEO'],
-  authors: [{ name: 'Ranked Daily', url: 'https://ranked-daily.com' }],
-  robots: 'index, follow',
-  openGraph: {
-    title,
-    description,
-    url: 'https://ranked-daily.com',
-    siteName: 'Ranked Daily',
-    images: [
-      {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
-        alt: title,
-      },
-    ],
-    locale: 'en_US',
-    type: 'website',
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title,
-    description,
-    images: ['/og-image.png'],
-  },
+export const metadata = {
+  title: 'Ranked Daily',
+  description: 'A platform for ranking and discussing daily topics.',
+  keywords: 'us news, global news, tech, marketing, skilled labor, products, articles, rankings, daily'
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: 'Ranked Daily',
-    url: 'https://ranked-daily.com',
-    logo: 'https://ranked-daily.com/logo.png',
-    contactPoint: {
-      '@type': 'ContactPoint',
-      telephone: '+1-555-555-5555',
-      contactType: 'customer service',
-    },
-  };
-
-  const websiteJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: 'Ranked Daily',
-    url: 'https://ranked-daily.com',
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: 'https://ranked-daily.com/search?q={search_term_string}',
-      'query-input': 'required name=search_term_string',
-    },
-  };
-
-
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="en">
       <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
-        />
+        {/* Google Tag Manager Shim and Default Consent */}
+        <Script id="gtag-shim" strategy="beforeInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('consent', 'default', {
+              'ad_storage': 'denied',
+              'analytics_storage': 'denied',
+              'ad_user_data': 'denied',
+              'ad_personalization': 'denied'
+            });
+          `}
+        </Script>
+        {/* Google Tag Manager */}
+        <Script id="google-tag-manager" strategy="afterInteractive">
+          {`
+            (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+            new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+            j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+            'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+            })(window,document,'script','dataLayer','${GTM_ID}');
+          `}
+        </Script>
       </head>
       <body>
-        <Container fluid>
+        <noscript>
+          <iframe
+            src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+            height="0"
+            width="0"
+            style={{ display: "none", visibility: "hidden" }}
+          ></iframe>
+        </noscript>
+        <Header />
+        <main className="min-h-screen bg-background flex flex-col items-center">
           {children}
-        </Container>
+        </main>
+        <Consent />
       </body>
     </html>
   );
